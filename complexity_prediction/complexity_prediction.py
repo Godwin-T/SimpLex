@@ -1,4 +1,5 @@
 import pickle
+import pyphen
 import numpy as np
 
 from nltk import word_tokenize
@@ -36,7 +37,7 @@ def generate_dictionary_unigrams(path):
                 dictionary[token] = [1, 1]
         count += 1
 
-    res = open("datasets/dictionary_unigrams", "w")
+    res = open("./datasets/dictionary_unigrams", "w")
     for token in dictionary:
         res.write(token + " " + str(dictionary[token][0]) + " " + str(dictionary[token][1]) + "\n")
 
@@ -67,7 +68,7 @@ def generate_dictionary_bigrams(path):
                 dictionary[((tokens[i], tokens[i+1]))] = 1
         count += 1
 
-    res = open("datasets/dictionary_bigrams", "w")
+    res = open("./datasets/dictionary_bigrams", "w")
     for touple in dictionary:
         res.write(touple[0] + " " + touple[1] + " " + str(dictionary[touple]) + "\n")
 
@@ -116,6 +117,10 @@ def load_dictionary_bigrams(path):
 
     return dictionary
 
+def count_syllables(word):
+    dic = pyphen.Pyphen(lang='en_US')
+    syllables = dic.inserted(word).count('-') + 1
+    return syllables
 
 def generate_features(word, dictionary, total):
     """
@@ -132,7 +137,7 @@ def generate_features(word, dictionary, total):
     Returns:
     np.array(5): A line vector containing the features
     """
-    x = np.zeros((5))
+    x = np.zeros((6))
 
     if word in dictionary:
         x[0] = dictionary[word][0]
@@ -142,6 +147,7 @@ def generate_features(word, dictionary, total):
 
     synset = wordnet.synsets(word)
     x[4] = len(synset)
+    x[5] = count_syllables(word)
 
     return x
 
@@ -177,7 +183,7 @@ def train_model():
     X = np.asarray(X)
     y = np.asarray(y)
 
-    f = open("datasets/test_lexicon", "r")
+    f = open("./datasets/test_lexicon", "r")
 
     X_test = []
     y_test = []
@@ -274,7 +280,7 @@ def get_confusion_matrix(model, dictionary):
     scikitlearn confusion matrix: a scikitlearn object containing the full statistics for the performances of the current model
     """
     total = sum(x[0] for x in dictionary.values())
-    f = open("datasets/test_lexicon", "r")
+    f = open("./datasets/test_lexicon", "r")
     
     X_test = []
     y_test = []
