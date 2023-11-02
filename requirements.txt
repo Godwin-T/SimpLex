@@ -1,0 +1,13 @@
+scikit-learn
+numpy
+nltk
+simpletransformers
+PyDictionary
+gensim
+pyinflect
+pattern
+shutil
+gzip
+torch
+python-Levenshtein
+flask
