@@ -1,5 +1,6 @@
 import pickle
-
+import requests
+from bs4 import BeautifulSoup
 from PyDictionary import PyDictionary
 from gensim.models import KeyedVectors
 from nltk.stem import WordNetLemmatizer
@@ -53,6 +54,18 @@ def debug_print(msg, debug=False):
         print("[SYNONYMS GENERATION] " + msg)
 
 
+def wordsynonyms(term):
+    try:
+        response = requests.get('http://www.thesaurus.com/browse/{}'.format(term))
+        soup = BeautifulSoup(response.text, 'html')
+        section = soup.find('section', {'class': 'q7ELwPUtygkuxUXXOE9t ULFYcLlui2SL1DTZuWLn'})
+        words = section.find_all('a')
+        synonyms = [word.text for word in words]
+    except:
+        synonyms = []
+    return synonyms
+
+
 def get_synonyms(word, nltk_pos, path, debug=False):
     """
     Get a list of synonyms for a given word and its corresponding POS
@@ -70,7 +83,8 @@ def get_synonyms(word, nltk_pos, path, debug=False):
     list: a list of touples formed by the synonym and its cosine similarity to the original word
     """
     dictionary = PyDictionary()
-    model = pickle.load(open(path, "rb"))
+    #model = pickle.load(open(path, "rb"))
+    model = KeyedVectors.load_word2vec_format(path, debug=False)
 
     lemmatizer = WordNetLemmatizer()
     word = lemmatizer.lemmatize(word, pos=tagConversion(nltk_pos))
@@ -137,12 +151,14 @@ def get_synonyms_transformers(word, nltk_pos, model, dictionary_unigrams, total,
     Returns:
     list: a list of touples formed by the synonym and the value 0 (the second value is for compatibility purposes and shall be ignored)
     """
-    dictionary = PyDictionary()
+    #dictionary = PyDictionary()
 
     lemmatizer = WordNetLemmatizer()
+    
     word = lemmatizer.lemmatize(word, pos=tagConversion(nltk_pos))
     
-    synonyms = dictionary.synonym(word)
+    #synonyms = dictionary.synonym(word)
+    synonyms = wordsynonyms(word)
 
     if synonyms == None:
         return []
